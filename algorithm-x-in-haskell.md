@@ -810,7 +810,7 @@ scanToFirstAlgorithmXTry' m solution =
     in  partial ++ [complete]
 ```
 
-Break the list of states returned by `scanAlgorithmXTry'` before the complete solution, return the partial solution states that came before, appending the complete solution state. Ignore the rest.
+Break the list of states returned by `scanAlgorithmXTry'` cutting before the first complete solution. Return the partial solution states that came before the cut, appending the complete solution state (the first after the cut). Ignore the rest.
 
 ```Haskell
 ghci> printScan $ scanToFirstAlgorithmXTry' m1 []
