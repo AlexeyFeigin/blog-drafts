@@ -461,7 +461,7 @@ From Wikipedia:
 
 "Deterministically" here means we have a procedure of picking some column right away, and "nondeteministically" means that the choice involves some kind of space search.
 
-We have, in fact, just performed one iteration of Algorithm X manually.
+We have, in fact, just performed one iteration of Algorithm X manually. We chose a column, chose a row and reduced the matrix.
 
 Instead of performing these steps through iteration
 
