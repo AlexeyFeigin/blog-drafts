@@ -56,7 +56,7 @@ In our case the solution is this:
 
 {
 
-&nbsp;&nbsp;&nbsp;&nbsp;{1, 4, 7},
+&nbsp;&nbsp;&nbsp;&nbsp;{1, 4},
 
 &nbsp;&nbsp;&nbsp;&nbsp;{3, 5, 6},
 
@@ -382,4 +382,17 @@ In order to search for an exact cover solution, we should pick a column and try 
 
 Now we have to remove from the matrix all rows that conflict with row 0. Row 0 contains elements 1, 4 and 7. Any other rows that use these elements must be removed, otherwise we will have some elements of **U** in multiple elements of **S\***. In other words, we must only keep rows disjoint with row 0.
 
+```Haskell
+ghci> SparseMatrix (IntMap.filter ((rows1 ! 0) `disjoint`) rows1) (unions sets1)
+
++---++---+---+---+---+---+---+---+
+|   || 1 | 2 | 3 | 4 | 5 | 6 | 7 |
++===++===+===+===+===+===+===+===+
+| 3 || 0 | 0 | 1 | 0 | 1 | 1 | 0 |
++---++---+---+---+---+---+---+---+
+```
+
+Only row 3 is disjoint with row 1.
+
+Unfortunately, we can see that column 1 cannot be satisfied by this remaining row. So row 0 cannot be part of the solution. We should go back and pick another row.
 ...
