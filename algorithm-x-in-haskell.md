@@ -64,7 +64,7 @@ In our case the solution is this:
 
 }
 
-Every element of **U** appears in exactly one element of **S\***.
+Every element of **U** = {1, 2, 3, 4, 5, 6, 7} appears in exactly one element of **S\***.
 
 An example of a non-solution is:
 
@@ -120,7 +120,7 @@ set0 = fromList [1, 4, 7]
 
 `set0` is an `IntSet` (a set of `Int`s). Internally, it is represented as an immutable tree.
 
-We can interact with it in the interpreter `ghci`:
+We can interact with it in the `ghci` interpreter:
 
 ```Haskell
 ghci> set0
@@ -298,9 +298,12 @@ The `Rows` with the deleted row are a new data structure. Both the old and the n
 
 This will be handy later when we will want to delete rows and columns from our sparse matrix and then backtrack.
 
-We want to use something like this to represent our sparse matrix but at the moment, when we query for the existence of elements within our rows, we cannot tell whether the queried element is within the matrix or not.
+We want to use something like `Rows` to represent our sparse matrix, but at the moment when we query for the existence of elements within our rows, we cannot tell whether the queried element is within the matrix or not.
 
 ```Haskell
+ghci> rows1 ! 0
+fromList [1,4,7]
+
 ghci> member 1 $ rows1 ! 0
 True
 ```
@@ -321,7 +324,7 @@ False
 
 10 is not a member of row 0. But is it a member of the matrix?
 
-Now, we need another piece of information to keep track of what is in our sparse matrix: which columns are in the matrix?
+So we need another piece of information to keep track of what is in our sparse matrix: which columns are in the matrix?
 
 ```Haskell
 type ActiveCols = IntSet
