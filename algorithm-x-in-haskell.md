@@ -1,4 +1,4 @@
-# Incomplete Draft: Algorithm X in Haskell step by step
+# Draft: Algorithm X in Haskell step by step
 
 Now, don't panic. You don't necessarily need to know Haskell, as I will describe everything that's happening.
 
