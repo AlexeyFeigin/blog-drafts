@@ -508,28 +508,28 @@ It's time to think about writing a recursive function.
 
 type IsCompleteSolution = Bool
 
-scanAlgorithmXTry' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSolution)]
+scanAlgoXSimple' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSolution)]
 ...
 ```
 
-`scanAlgorithmXTry'` is a function taking a matrix and a partial solution (list of `Key`s) and returning a list of intermediate results: a list of state tuples of (a solution, a matrix, a boolean indicating if the solution is complete).
+`scanAlgoXSimple'` is a function taking a matrix and a partial solution (list of `Key`s) and returning a list of intermediate results: a list of state tuples of (a solution, a matrix, a boolean indicating if the solution is complete).
 
 ```Haskell
 -- NOT final version
 
 type IsCompleteSolution = Bool
 
-scanAlgorithmXTry' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSolution)]
-scanAlgorithmXTry' m@(SparseMatrix rows activeCols) solution
+scanAlgoXSimple' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSolution)]
+scanAlgoXSimple' m@(SparseMatrix rows activeCols) solution
     | size activeCols == 0 = [(solution, m, True)]
     | otherwise            = (solution, m, False) : []
 ```
 
-- If there are no more active columns, `scanAlgorithmXTry'` returns the solution, the matrix, and `True` indicating that this a complete solution.
+- If there are no more active columns, `scanAlgoXSimple'` returns the solution, the matrix, and `True` indicating that this a complete solution.
 - Otherwise, for the moment we will just return the current partial solution, the current matrix and `False` indicating that this is a partial solution. And then we don't do anything further.
 
 ```Haskell
-ghci> printScan $ scanAlgorithmXTry' m1 []
+ghci> printScan $ scanAlgoXSimple' m1 []
 ([],
 +---++---+---+---+---+---+---+---+
 |   || 1 | 2 | 3 | 4 | 5 | 6 | 7 |
@@ -551,20 +551,20 @@ The solution is empty, the matrix is full, and the solution is partial. And we d
 
 type IsCompleteSolution = Bool
 
-scanAlgorithmXTry' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSolution)]
-scanAlgorithmXTry' m@(SparseMatrix rows activeCols) solution
+scanAlgoXSimple' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSolution)]
+scanAlgoXSimple' m@(SparseMatrix rows activeCols) solution
     | size activeCols == 0 = [(solution, m, True)]
     | otherwise =
         let (r, row)  = IntMap.findMin rows
             m'        = SparseMatrix (IntMap.filter (row `disjoint`) rows)
                                      (activeCols `difference` row)
-        in  (solution, m, False) : scanAlgorithmXTry' m' (r:solution)
+        in  (solution, m, False) : scanAlgoXSimple' m' (r:solution)
 ```
 
-Here we try taking the first available row. Then we reduce the matrix as we did before: the rows are filtered for being `disjoint` with the selected row and the row's 1s are removed from the active columns with `difference` - giving us the reduced matrix `m'`. We return the current state tuple and recursively return the rest of the states by calling `scanAlgorithmXTry' m' (r:solution)`. We pass the reduced matrix to `scanAlgorithmXTry'`, as well as prepending the selected row key `r` to the current partial solution. (Our solution list will grow backwards.)
+Here we try taking the first available row. Then we reduce the matrix as we did before: the rows are filtered for being `disjoint` with the selected row and the row's 1s are removed from the active columns with `difference` - giving us the reduced matrix `m'`. We return the current state tuple and recursively return the rest of the states by calling `scanAlgoXSimple' m' (r:solution)`. We pass the reduced matrix to `scanAlgoXSimple'`, as well as prepending the selected row key `r` to the current partial solution. (Our solution list will grow backwards.)
 
 ```Haskell
-ghci> printScan $ scanAlgorithmXTry' m1 []
+ghci> printScan $ scanAlgoXSimple' m1 []
 ([],
 +---++---+---+---+---+---+---+---+
 |   || 1 | 2 | 3 | 4 | 5 | 6 | 7 |
@@ -601,20 +601,20 @@ We picked row 0. Next we only had one choice, to pick row 3. Next we were left w
 
 type IsCompleteSolution = Bool
 
-scanAlgorithmXTry' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSolution)]
-scanAlgorithmXTry' m@(SparseMatrix rows activeCols) solution
+scanAlgoXSimple' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSolution)]
+scanAlgoXSimple' m@(SparseMatrix rows activeCols) solution
     | size activeCols == 0 = [(solution, m, True)]
     | otherwise =
             (solution, m, False) : [ s | (r, row) <- IntMap.toList rows,
                                          let m' = SparseMatrix (IntMap.filter (row `disjoint`) rows)
                                                                (activeCols `difference` row),
-                                         s <- scanAlgorithmXTry' m' (r:solution) ]
+                                         s <- scanAlgoXSimple' m' (r:solution) ]
 ```
 
-Instead of picking a row out of the matrix as before, we now iterate over all rows (`(r, row) <- IntMap.toList rows`). For each row we reduce the matrix and recursively return all results for that selection, concatenating them (`s <- scanAlgorithmXTry' m' (r:solution)`).
+Instead of picking a row out of the matrix as before, we now iterate over all rows (`(r, row) <- IntMap.toList rows`). For each row we reduce the matrix and recursively return all results for that selection, concatenating them (`s <- scanAlgoXSimple' m' (r:solution)`).
 
 ```Haskell
-ghci> printScan $ scanAlgorithmXTry' m1 []
+ghci> printScan $ scanAlgoXSimple' m1 []
 ([],
 +---++---+---+---+---+---+---+---+
 |   || 1 | 2 | 3 | 4 | 5 | 6 | 7 |
@@ -804,16 +804,16 @@ This is not the most optimal, but we have found all of the solutions using depth
 This is a little too long, so let's write a function to stop after the first solution is found.
 
 ```Haskell
-scanToFirstAlgorithmXTry' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSolution)]
-scanToFirstAlgorithmXTry' m solution =
-    let (partial, (complete:rest)) = break (\(_, _, isComplete) -> isComplete) $ scanAlgorithmXTry' m solution
+upToComplete :: [([Key], SparseMatrix, IsCompleteSolution)] -> [([Key], SparseMatrix, IsCompleteSolution)]
+upToComplete states =
+    let (partial, (complete:rest)) = break (\(_, _, isComplete) -> isComplete) states
     in  partial ++ [complete]
 ```
 
-Break the list of states returned by `scanAlgorithmXTry'` cutting before the first complete solution. Return the partial solution states that came before the cut, appending the complete solution state (the first after the cut). Ignore the rest.
+Break the list of states, cutting before the first complete solution. Return the partial solution states that came before the cut, appending the complete solution state (the first after the cut). Ignore the rest.
 
 ```Haskell
-ghci> printScan $ scanToFirstAlgorithmXTry' m1 []
+ghci> printScan $ upToComplete $ scanAlgoXSimple' m1 []
 ([],
 +---++---+---+---+---+---+---+---+
 |   || 1 | 2 | 3 | 4 | 5 | 6 | 7 |
@@ -869,5 +869,7 @@ ghci> printScan $ scanToFirstAlgorithmXTry' m1 []
 ```
 
 This is more manageable. Recall the solutions are built backwards. So we tried row 0, then we tried row 3. That did not work out, so we backtracked and tried row 1, then row 3, then row 5, and that worked out.
+
+Everything here is lazily evaluated, so scanAlgoXSimple' stopped searching when we stopped asking for further states after receiving the complete solution.
 
 To be continued...
