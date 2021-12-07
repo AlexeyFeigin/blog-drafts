@@ -445,4 +445,6 @@ This matrix represents the remaining options after having picked row 1.(Again, o
 
 No columns have all 0s, so we could keep searching within this matrix in hopes of finding the complete solution.
 
+We now have enough intuitions to look at Algorithm X and understand what it is trying to do.
+
 To be continued...
