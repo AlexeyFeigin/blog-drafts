@@ -613,7 +613,7 @@ scanAlgoXSimple' m@(SparseMatrix rows activeCols) solution
                                          s <- scanAlgoXSimple' m' (r:solution) ]
 ```
 
-Instead of picking a row out of the matrix as before, we now iterate over all rows (`(r, row) <- IntMap.toList rows`). For each row we reduce the matrix and recursively return all results for that selection, concatenating them (`s <- scanAlgoXSimple' m' (r:solution)`).
+Instead of picking a row out of the matrix as before, we now iterate over all rows (`(r, row) <- IntMap.toList rows`). For each row we reduce the matrix and recursively return all state results for that selection (`s <- scanAlgoXSimple' m' (r:solution)`). When we go on to the next row, the matrix will be reduced according to that row selection and the results of `s <- scanAlgoXSimple' m' (r:solution)` will keep being put into the same list (it's all happening in one list comprehension), and so on. (Having multiple `<-` bindings in one list comprehension is a bit like having nested for loops.)
 
 ```Haskell
 ghci> printScan $ scanAlgoXSimple' m1 []
