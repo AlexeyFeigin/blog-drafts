@@ -394,6 +394,55 @@ ghci> SparseMatrix (IntMap.filter ((rows1 ! 0) `disjoint`) rows1) (unions sets1)
 
 Only row 3 is disjoint with row 0.
 
-Unfortunately, we can see that column 1 cannot be satisfied by this remaining row. So row 0 cannot be part of the solution. We should go back and pick another row.
+Another thing we need to do is remove columns from the matrix that we satisfied by picking row 0. We remove these from the `ActiveCols` of the matrix.
+
+```Haskell
+ghci> unions sets1
+fromList [1,2,3,4,5,6,7]
+
+ghci> unions sets1 `difference` (rows1 ! 0)
+fromList [2,3,5,6]
+
+ghci> SparseMatrix (IntMap.filter ((rows1 ! 0) `disjoint`) rows1) (unions sets1 `difference` (rows1 ! 0))
+
++---++---+---+---+---+
+|   || 2 | 3 | 5 | 6 |
++===++===+===+===+===+
+| 3 || 0 | 1 | 1 | 1 |
++---++---+---+---+---+
+```
+
+Unfortunately, we can see that column 2 cannot be satisfied by this remaining row. So row 0 cannot be part of the solution. We should go back and pick another row.
+
+Let's go back and try row 1.
+
+```Haskell
+ghci> print m1
+
++---++---+---+---+---+---+---+---+
+|   || 1 | 2 | 3 | 4 | 5 | 6 | 7 |
++===++===+===+===+===+===+===+===+
+| 0 || 1 | 0 | 0 | 1 | 0 | 0 | 1 |
+| 1 || 1 | 0 | 0 | 1 | 0 | 0 | 0 |
+| 2 || 0 | 0 | 0 | 1 | 1 | 0 | 1 |
+| 3 || 0 | 0 | 1 | 0 | 1 | 1 | 0 |
+| 4 || 0 | 1 | 1 | 0 | 0 | 1 | 1 |
+| 5 || 0 | 1 | 0 | 0 | 0 | 0 | 1 |
++---++---+---+---+---+---+---+---+
+
+ghci> SparseMatrix (IntMap.filter ((rows1 ! 1) `disjoint`) rows1) (unions sets1 `difference` (rows1 ! 1))
+
++---++---+---+---+---+---+
+|   || 2 | 3 | 5 | 6 | 7 |
++===++===+===+===+===+===+
+| 3 || 0 | 1 | 1 | 1 | 0 |
+| 4 || 1 | 1 | 0 | 1 | 1 |
+| 5 || 1 | 0 | 0 | 0 | 1 |
++---++---+---+---+---+---+
+```
+
+This matrix represents the remaining options after having picked row 1.(Again, other rows conflicting with the choice and the filled columns have been removed.)
+
+No columns have all 0s, so we could keep searching within this matrix in hopes of finding the complete solution.
 
 To be continued...
