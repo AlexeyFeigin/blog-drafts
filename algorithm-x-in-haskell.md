@@ -178,6 +178,7 @@ I've prepared some printing functions earlier so we can print our data structure
 
 - `printList`
 - `printRow`
+- `printScan`
 - `instance Show SparseMatrix`
 
 (Definitions in Appendix.)
@@ -503,6 +504,98 @@ we used the `difference` between the active columns and the selected row (also _
 It's time to think about writing a recursive function.
 
 ```Haskell
+-- NOT final version
+
+type IsCompleteSolution = Bool
+
+scanAlgorithmXTry' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSolution)]
+...
 ```
+
+`scanAlgorithmXTry'` is a function taking a matrix and a partial solution (list of `Key`s) and returning a list of intermediate results: a list of state tuples of (a solution, a matrix, a boolean indicating if the solution is complete).
+
+```Haskell
+-- NOT final version
+
+type IsCompleteSolution = Bool
+
+scanAlgorithmXTry' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSolution)]
+scanAlgorithmXTry' m@(SparseMatrix rows activeCols) solution
+    | size activeCols == 0 = [(solution, m, True)]
+    | otherwise            = (solution, m, False) : []
+```
+
+- If there are no more active columns, `scanAlgorithmXTry'` returns the solution, the matrix, and `True` indicating that this a complete solution.
+- Otherwise, for the moment we will just return the current partial solution, the current matrix and `False` indicating that this is a partial solution. And then we don't do anything further.
+
+```Haskell
+ghci> printScan $ scanAlgorithmXTry' m1 []
+([],
++---++---+---+---+---+---+---+---+
+|   || 1 | 2 | 3 | 4 | 5 | 6 | 7 |
++===++===+===+===+===+===+===+===+
+| 0 || 1 | 0 | 0 | 1 | 0 | 0 | 1 |
+| 1 || 1 | 0 | 0 | 1 | 0 | 0 | 0 |
+| 2 || 0 | 0 | 0 | 1 | 1 | 0 | 1 |
+| 3 || 0 | 0 | 1 | 0 | 1 | 1 | 0 |
+| 4 || 0 | 1 | 1 | 0 | 0 | 1 | 1 |
+| 5 || 0 | 1 | 0 | 0 | 0 | 0 | 1 |
++---++---+---+---+---+---+---+---+
+,False)
+```
+
+The solution is empty, the matrix is full, and the solution is partial. And we don't go further.
+
+```Haskell
+-- NOT final version
+
+type IsCompleteSolution = Bool
+
+scanAlgorithmXTry' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSolution)]
+scanAlgorithmXTry' m@(SparseMatrix rows activeCols) solution
+    | size activeCols == 0 = [(solution, m, True)]
+    | otherwise =
+        let (r, row)  = IntMap.findMin rows
+            m'        = SparseMatrix (IntMap.filter (row `disjoint`) rows)
+                                     (activeCols `difference` row)
+        in  (solution, m, False) : scanAlgorithmXTry' m' (r:solution)
+```
+
+Here we try taking the first available row. Then we reduce the matrix as we did before: the rows are filtered for being `disjoint` with the selected row and the row's 1s are removed from the active columns with `difference` - giving us the reduced matrix `m'`. We return the current state tuple and recursively return the rest of the states by calling `scanAlgorithmXTry' m' (r:solution)`. We pass the reduced matrix to `scanAlgorithmXTry'`, as well as prepending the selected row key `r` to the current partial solution. (Our solution list will grow backwards.)
+
+```Haskell
+ghci> printScan $ scanAlgorithmXTry' m1 []
+([],
++---++---+---+---+---+---+---+---+
+|   || 1 | 2 | 3 | 4 | 5 | 6 | 7 |
++===++===+===+===+===+===+===+===+
+| 0 || 1 | 0 | 0 | 1 | 0 | 0 | 1 |
+| 1 || 1 | 0 | 0 | 1 | 0 | 0 | 0 |
+| 2 || 0 | 0 | 0 | 1 | 1 | 0 | 1 |
+| 3 || 0 | 0 | 1 | 0 | 1 | 1 | 0 |
+| 4 || 0 | 1 | 1 | 0 | 0 | 1 | 1 |
+| 5 || 0 | 1 | 0 | 0 | 0 | 0 | 1 |
++---++---+---+---+---+---+---+---+
+,False)
+
+([0],
++---++---+---+---+---+
+|   || 2 | 3 | 5 | 6 |
++===++===+===+===+===+
+| 3 || 0 | 1 | 1 | 1 |
++---++---+---+---+---+
+,False)
+
+([3,0],
++--++---+
+|  || 2 |
++==++===+
++--++---+
+,False)*** Exception: findMin: empty map has no minimal element
+```
+
+We picked row 0. Next we only had one choice, to pick row 3. Next we were left with no rows but column 2 was not satisfied. We have not handled this case, so we got an error.
+
+
 
 To be continued...
