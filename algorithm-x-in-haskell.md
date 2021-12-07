@@ -395,4 +395,5 @@ ghci> SparseMatrix (IntMap.filter ((rows1 ! 0) `disjoint`) rows1) (unions sets1)
 Only row 3 is disjoint with row 0.
 
 Unfortunately, we can see that column 1 cannot be satisfied by this remaining row. So row 0 cannot be part of the solution. We should go back and pick another row.
-...
+
+To be continued...
