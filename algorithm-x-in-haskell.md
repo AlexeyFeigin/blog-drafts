@@ -346,9 +346,9 @@ ghci> member 10 $ rows1 ! 0
 False
 ```
 
-10 is not a member of row 0. But is it a member of the matrix?
+10 is not a member of row 0. But is it within the bounds of the matrix?
 
-So we need another piece of information to keep track of what is in our sparse matrix: which columns are in the matrix?
+We need another piece of information to keep track of what is in our sparse matrix: which columns are in the matrix?
 
 ```Haskell
 type ActiveCols = IntSet
