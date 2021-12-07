@@ -906,7 +906,7 @@ ghci> head $ algoXSimple' m1 []
 [5,3,1]
 ```
 
-Let's appreciate for a moment, how far we have come so quickly, and with such beautiful, terse code.
+Let's appreciate for a moment how far we have come so quickly and with what beautiful, terse code.
 
 Compare this for compactness and simplicity with Dancing Links, which is how Algorithm X is usually implemented.
 
