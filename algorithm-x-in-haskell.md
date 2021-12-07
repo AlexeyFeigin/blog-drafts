@@ -887,6 +887,18 @@ algoXSimple' (SparseMatrix rows activeCols) solution
 ```
 
 ```Haskell
+ghci> printList "Set" sets1
++---++--------------------+
+|   ||                Set |
++===++====================+
+| 0 ||   fromList [1,4,7] |
+| 1 ||     fromList [1,4] |
+| 2 ||   fromList [4,5,7] |
+| 3 ||   fromList [3,5,6] |
+| 4 || fromList [2,3,6,7] |
+| 5 ||     fromList [2,7] |
++---++--------------------+
+
 ghci> algoXSimple' m1 []
 [[5,3,1],[3,5,1],[5,1,3],[1,5,3],[3,1,5],[1,3,5]]
 
@@ -894,7 +906,7 @@ ghci> head $ algoXSimple' m1 []
 [5,3,1]
 ```
 
-Let's appreciate for a moment, how far we have come so quickly, and with such beautiful terse code.
+Let's appreciate for a moment, how far we have come so quickly, and with such beautiful, terse code.
 
 Compare this for compactness and simplicity with Dancing Links, which is how Algorithm X is usually implemented.
 
