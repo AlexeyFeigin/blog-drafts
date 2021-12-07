@@ -129,6 +129,27 @@ fromList [1,4,7]
 ghci> size set0
 3
 
+ghci> :t member
+member :: Key -> IntSet -> Bool
+```
+
+The function `member` takes a `Key` and an `IntSet` and returns a `Bool` indicating whether the keys is a member of the set.
+
+```Haskell
+ghci> :i Key
+type Key :: *
+type Key = Int
+        -- Defined in `Data.IntSet.Internal'
+```
+
+`Key` is a type synonym for `Int`.
+
+Checking element membership:
+
+```Haskell
+ghci> set0
+fromList [1,4,7]
+
 ghci> member 1 set0
 True
 
@@ -136,7 +157,7 @@ ghci> member 0 set0
 False
 ```
 
-Let's get some more sets going.
+Let's get some more sets going:
 
 ```Haskell
 sets1 :: [IntSet]
@@ -480,5 +501,8 @@ we used equivalent the functionality to filter the rows by the criterion of bein
 we used the `difference` between the active columns and the selected row (also _O(n+m)_). (Keep in mind our operations do not mutate the original data structure and allow easy backtracking.)
 
 It's time to think about writing a recursive function.
+
+```Haskell
+```
 
 To be continued...
