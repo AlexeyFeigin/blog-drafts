@@ -445,6 +445,40 @@ This matrix represents the remaining options after having picked row 1.(Again, o
 
 No columns have all 0s, so we could keep searching within this matrix in hopes of finding the complete solution.
 
-We now have enough intuitions to look at Algorithm X and understand what it is trying to do.
+After playing around like this, we are ready to look at Algorithm X and understand what it is trying to do.
+
+From Wikipedia:
+
+- If the matrix A has no columns, the current partial solution is a valid solution; terminate successfully.
+    - Otherwise choose a column c (deterministically).
+    - Choose a row r such that Ar, c = 1 (nondeterministically).
+    - Include row r in the partial solution.
+    - For each column j such that Ar, j = 1,
+        - for each row i such that Ai, j = 1,
+            - delete row i from matrix A.
+        - delete column j from matrix A.
+    - Repeat this algorithm recursively on the reduced matrix A.
+
+"Deterministically" here means we have a procedure of picking some column right away, and "nondeteministically" means that the choice involves some kind of space search.
+
+We have, in fact, just performed one iteration of Algorithm X manually.
+
+Instead of performing these steps through iteration
+
+- ...
+    - For each column j such that Ar, j = 1,
+        - for each row i such that Ai, j = 1,
+            - delete row i from matrix A.
+
+we used equivalent the functionality to filter the rows by the criterion of being disjoint with the selected row (the `disjoint` operation runs in _O(n+m)_), and instead of
+
+- ...
+    - For each column j such that Ar, j = 1,
+        - ...
+        - delete column j from matrix A.
+
+we used the `difference` between the active columns and the selected row (also _O(n+m)_). (Keep in mind our operations do not mutate the original data structure and allow easy backtracking.)
+
+It's time to think about writing a recursive function.
 
 To be continued...
