@@ -594,8 +594,280 @@ ghci> printScan $ scanAlgorithmXTry' m1 []
 ,False)*** Exception: findMin: empty map has no minimal element
 ```
 
-We picked row 0. Next we only had one choice, to pick row 3. Next we were left with no rows but column 2 was not satisfied. We have not handled this case, so we got an error.
+We picked row 0. Next we only had one choice, to pick row 3. Next we were left with no rows but column 2 had not been satisfied. We have not handled this case, so we got an error.
 
+```Haskell
+-- NOT final version
 
+type IsCompleteSolution = Bool
+
+scanAlgorithmXTry' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSolution)]
+scanAlgorithmXTry' m@(SparseMatrix rows activeCols) solution
+    | size activeCols == 0 = [(solution, m, True)]
+    | otherwise =
+            (solution, m, False) : [ s | (r, row) <- IntMap.toList rows,
+                                         let m' = SparseMatrix (IntMap.filter (row `disjoint`) rows)
+                                                               (activeCols `difference` row),
+                                         s <- scanAlgorithmXTry' m' (r:solution) ]
+```
+
+Instead of picking a row out of the matrix as before, we now iterate over all rows (`(r, row) <- IntMap.toList rows`). For each row we reduce the matrix and recursively return all results for that selection, concatenating them (`s <- scanAlgorithmXTry' m' (r:solution)`).
+
+```Haskell
+ghci> printScan $ scanAlgorithmXTry' m1 []
+([],
++---++---+---+---+---+---+---+---+
+|   || 1 | 2 | 3 | 4 | 5 | 6 | 7 |
++===++===+===+===+===+===+===+===+
+| 0 || 1 | 0 | 0 | 1 | 0 | 0 | 1 |
+| 1 || 1 | 0 | 0 | 1 | 0 | 0 | 0 |
+| 2 || 0 | 0 | 0 | 1 | 1 | 0 | 1 |
+| 3 || 0 | 0 | 1 | 0 | 1 | 1 | 0 |
+| 4 || 0 | 1 | 1 | 0 | 0 | 1 | 1 |
+| 5 || 0 | 1 | 0 | 0 | 0 | 0 | 1 |
++---++---+---+---+---+---+---+---+
+,False)
+
+([0],
++---++---+---+---+---+
+|   || 2 | 3 | 5 | 6 |
++===++===+===+===+===+
+| 3 || 0 | 1 | 1 | 1 |
++---++---+---+---+---+
+,False)
+
+([3,0],
++--++---+
+|  || 2 |
++==++===+
++--++---+
+,False)
+
+([1],
++---++---+---+---+---+---+
+|   || 2 | 3 | 5 | 6 | 7 |
++===++===+===+===+===+===+
+| 3 || 0 | 1 | 1 | 1 | 0 |
+| 4 || 1 | 1 | 0 | 1 | 1 |
+| 5 || 1 | 0 | 0 | 0 | 1 |
++---++---+---+---+---+---+
+,False)
+
+([3,1],
++---++---+---+
+|   || 2 | 7 |
++===++===+===+
+| 5 || 1 | 1 |
++---++---+---+
+,False)
+
+([5,3,1],
++--++--+
+|  ||  |
++==++==+
++--++--+
+,True)
+
+([4,1],
++--++---+
+|  || 5 |
++==++===+
++--++---+
+,False)
+
+([5,1],
++---++---+---+---+
+|   || 3 | 5 | 6 |
++===++===+===+===+
+| 3 || 1 | 1 | 1 |
++---++---+---+---+
+,False)
+
+([3,5,1],
++--++--+
+|  ||  |
++==++==+
++--++--+
+,True)
+
+([2],
++--++---+---+---+---+
+|  || 1 | 2 | 3 | 6 |
++==++===+===+===+===+
++--++---+---+---+---+
+,False)
+
+([3],
++---++---+---+---+---+
+|   || 1 | 2 | 4 | 7 |
++===++===+===+===+===+
+| 0 || 1 | 0 | 1 | 1 |
+| 1 || 1 | 0 | 1 | 0 |
+| 5 || 0 | 1 | 0 | 1 |
++---++---+---+---+---+
+,False)
+
+([0,3],
++--++---+
+|  || 2 |
++==++===+
++--++---+
+,False)
+
+([1,3],
++---++---+---+
+|   || 2 | 7 |
++===++===+===+
+| 5 || 1 | 1 |
++---++---+---+
+,False)
+
+([5,1,3],
++--++--+
+|  ||  |
++==++==+
++--++--+
+,True)
+
+([5,3],
++---++---+---+
+|   || 1 | 4 |
++===++===+===+
+| 1 || 1 | 1 |
++---++---+---+
+,False)
+
+([1,5,3],
++--++--+
+|  ||  |
++==++==+
++--++--+
+,True)
+
+([4],
++---++---+---+---+
+|   || 1 | 4 | 5 |
++===++===+===+===+
+| 1 || 1 | 1 | 0 |
++---++---+---+---+
+,False)
+
+([1,4],
++--++---+
+|  || 5 |
++==++===+
++--++---+
+,False)
+
+([5],
++---++---+---+---+---+---+
+|   || 1 | 3 | 4 | 5 | 6 |
++===++===+===+===+===+===+
+| 1 || 1 | 0 | 1 | 0 | 0 |
+| 3 || 0 | 1 | 0 | 1 | 1 |
++---++---+---+---+---+---+
+,False)
+
+([1,5],
++---++---+---+---+
+|   || 3 | 5 | 6 |
++===++===+===+===+
+| 3 || 1 | 1 | 1 |
++---++---+---+---+
+,False)
+
+([3,1,5],
++--++--+
+|  ||  |
++==++==+
++--++--+
+,True)
+
+([3,5],
++---++---+---+
+|   || 1 | 4 |
++===++===+===+
+| 1 || 1 | 1 |
++---++---+---+
+,False)
+
+([1,3,5],
++--++--+
+|  ||  |
++==++==+
++--++--+
+,True)
+```
+
+This is not the most optimal, but we have found all of the solutions using depth-first search. They are all permutations of the same solution {1, 3, 5}.
+
+This is a little too long, so let's write a function to stop after the first solution is found.
+
+```Haskell
+scanToFirstAlgorithmXTry' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSolution)]
+scanToFirstAlgorithmXTry' m solution =
+    let (partial, (complete:rest)) = break (\(_, _, isComplete) -> isComplete) $ scanAlgorithmXTry' m solution
+    in  partial ++ [complete]
+```
+
+Break the list of states returned by `scanAlgorithmXTry'` before the complete solution, return the partial solution states that came before, appending the complete solution state. Ignore the rest.
+
+```Haskell
+ghci> printScan $ scanToFirstAlgorithmXTry' m1 []
+([],
++---++---+---+---+---+---+---+---+
+|   || 1 | 2 | 3 | 4 | 5 | 6 | 7 |
++===++===+===+===+===+===+===+===+
+| 0 || 1 | 0 | 0 | 1 | 0 | 0 | 1 |
+| 1 || 1 | 0 | 0 | 1 | 0 | 0 | 0 |
+| 2 || 0 | 0 | 0 | 1 | 1 | 0 | 1 |
+| 3 || 0 | 0 | 1 | 0 | 1 | 1 | 0 |
+| 4 || 0 | 1 | 1 | 0 | 0 | 1 | 1 |
+| 5 || 0 | 1 | 0 | 0 | 0 | 0 | 1 |
++---++---+---+---+---+---+---+---+
+,False)
+
+([0],
++---++---+---+---+---+
+|   || 2 | 3 | 5 | 6 |
++===++===+===+===+===+
+| 3 || 0 | 1 | 1 | 1 |
++---++---+---+---+---+
+,False)
+
+([3,0],
++--++---+
+|  || 2 |
++==++===+
++--++---+
+,False)
+
+([1],
++---++---+---+---+---+---+
+|   || 2 | 3 | 5 | 6 | 7 |
++===++===+===+===+===+===+
+| 3 || 0 | 1 | 1 | 1 | 0 |
+| 4 || 1 | 1 | 0 | 1 | 1 |
+| 5 || 1 | 0 | 0 | 0 | 1 |
++---++---+---+---+---+---+
+,False)
+
+([3,1],
++---++---+---+
+|   || 2 | 7 |
++===++===+===+
+| 5 || 1 | 1 |
++---++---+---+
+,False)
+
+([5,3,1],
++--++--+
+|  ||  |
++==++==+
++--++--+
+,True)
+```
+
+This is more manageable. Recall the solutions are built backwards. So we tried row 0, then we tried row 3. That did not work out, so we backtracked and tried row 1, then row 3, then row 5, and that worked out.
 
 To be continued...
