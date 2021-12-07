@@ -929,7 +929,9 @@ algoX' (SparseMatrix rows activeCols) solution
             selectedColumn = snd . minimum $ map (\(key, cSum) -> (cSum, (key, cSum))) $ IntMap.toList colSums
 ```
 
-A little verbose with selecting the column, but the main part of the algorithm remains clear. (Also, we could be caching some things to make the column selection computation more efficient...)
+Playing in the interpreter with some of the new expressions is left as an exercise to the reader.
+
+This version is little verbose with selecting the column, but the main part of the algorithm remains clear. (Also, we could be caching some things to make the column selection computation more efficient...)
 
 ```Haskell
 ghci> head $ algoX m1
@@ -940,10 +942,12 @@ Turns out the solution is the same in our toy case as with `algoXSimple'`.
 
 If there is interest, we can throw these algorithms at some large Sudoku-style puzzles in some future post.
 
-Holy-moly, did you really make it to the end of this post? You are a true hero.
+Holy-moly, did you really make it to the end? You are a true hero.
 
 
 ## Appendix
+
+### Printing functions
 
 ```Haskell
 (!.) :: Num a => Row -> Key -> a
