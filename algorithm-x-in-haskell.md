@@ -92,6 +92,9 @@ Another example of a non-solution is:
 
 Some elements of **U** appear in more than one element of the set.
 
+
+# Simple Algorithm X
+
 Algorithm X is an algorithm developed by Donald Knuth that solves the exact cover problem. Let's implement Algorithm X in Haskell. We can later use it to solve Sudoku puzzles (in another blog post).
 
 Here come some imports.
@@ -177,7 +180,6 @@ sets1 = map fromList [ [1, 4, 7]
 I've prepared some printing functions earlier so we can print our data structures.
 
 - `printList`
-- `printRow`
 - `printScan`
 - `instance Show SparseMatrix`
 
@@ -597,7 +599,7 @@ ghci> printScan $ scanAlgoXSimple' m1 []
 We picked row 0. Next we only had one choice, to pick row 3. Next we were left with no rows but column 2 had not been satisfied. We have not handled this case, so we got an error.
 
 ```Haskell
--- NOT final version
+-- Final version
 
 type IsCompleteSolution = Bool
 
@@ -799,9 +801,9 @@ ghci> printScan $ scanAlgoXSimple' m1 []
 ,True)
 ```
 
-This is not the most optimal, but we have found all of the solutions using depth-first search. They are all permutations of the same solution {1, 3, 5}.
+We have found all of the solutions. They are all permutations of the same solution {1, 3, 5}.
 
-This is a little too long, so let's write a function to stop after the first solution is found.
+The output is a little too long, so let's write a function to stop after the first solution is found.
 
 ```Haskell
 upToComplete :: [([Key], SparseMatrix, IsCompleteSolution)] -> [([Key], SparseMatrix, IsCompleteSolution)]
@@ -872,4 +874,103 @@ This is more manageable. Recall the solutions are built backwards. So we tried r
 
 Everything here is lazily evaluated, so scanAlgoXSimple' stopped searching when we stopped asking for further states after receiving the complete solution.
 
-To be continued...
+Here is a version of the function that only returns the solutions instead of all intermediate states.
+
+```Haskell
+algoXSimple' :: SparseMatrix -> [Key] -> [[Key]]
+algoXSimple' (SparseMatrix rows activeCols) solution
+    | size activeCols == 0 = [solution]
+    | otherwise            = [ s | (r, row) <- IntMap.toList rows,
+                                   let m' = SparseMatrix (IntMap.filter (row `disjoint`) rows)
+                                                         (activeCols `difference` row),
+                                   s <- algoXSimple' m' (r:solution) ]
+```
+
+```Haskell
+ghci> algoXSimple' m1 []
+[[5,3,1],[3,5,1],[5,1,3],[1,5,3],[3,1,5],[1,3,5]]
+
+ghci> head $ algoXSimple' m1 []
+[5,3,1]
+```
+
+Let's appreciate for a moment, how far we have come so quickly, and with such beautiful terse code.
+
+Compare this for compactness and simplicity with Dancing Links, which is how Algorithm X is usually implemented.
+
+https://www.wikiwand.com/en/Dancing_Links
+
+## Column selection
+
+Now, as Wikipedia says: to reduce the number of iterations, Knuth suggests that the column-choosing algorithm select a column with the smallest number of 1s in it.
+
+I'm going to give this one all in one go:
+
+```Haskell
+(+.) = IntMap.unionWith (+)
+
+algoX m = algoX' m []
+
+algoX' :: SparseMatrix -> [Key] -> [[Key]]
+algoX' (SparseMatrix rows activeCols) solution
+    | size activeCols == 0 = [solution]
+    | otherwise =
+        let (c, colSum) = selectedColumn
+        in  [ s | colSum > 0,
+                  (r, row) <- IntMap.toList rows,
+                  let m' = SparseMatrix (IntMap.filter (row `disjoint`) rows)
+                                        (activeCols `difference` row),
+                  s <- algoX' m' (r:solution) ]
+        where
+            withOnes row   = IntMap.fromSet (\_ -> 1) $ row `intersection` activeCols
+            colSums        = IntMap.foldl (\sums row -> sums +. withOnes row)
+                                          (IntMap.fromSet (\_ -> 0) activeCols)
+                                          rows
+            selectedColumn = snd . minimum $ map (\(key, cSum) -> (cSum, (key, cSum))) $ IntMap.toList colSums
+```
+
+A little verbose with selecting the column, but the main part of the algorithm remains clear. (Also, we could be caching some things to make the column selection computation more efficient...)
+
+```Haskell
+ghci> head $ algoX m1
+[5,3,1]
+```
+
+Turns out the solution is the same in our toy case as with `algoXSimple'`.
+
+If there is interest, we can throw these algorithms at some large Sudoku-style puzzles in some future post.
+
+Holy-moly, did you really make it to the end of this post? You are a true hero.
+
+
+## Appendix
+
+```Haskell
+(!.) :: Num a => Row -> Key -> a
+row !. key
+    | member key row = 1
+    | otherwise      = 0
+
+toFilledList :: Num a => ActiveCols -> Row -> [a]
+toFilledList activeCols row = map (row !.) $ elems activeCols
+
+instance Show SparseMatrix where
+    show (SparseMatrix rows activeCols) =
+        ('\n' :) $ render show show show $ Table (Group NoLine     $ map Header $ IntMap.keys rows)
+                                                 (Group SingleLine $ map Header $ elems activeCols)
+                                                 (map (toFilledList activeCols) $ IntMap.elems rows)
+
+printRow :: Row -> IO ()
+printRow row = print $ SparseMatrix (IntMap.fromList [(0, row)]) row
+
+oneColumnTable :: String -> [(key, value)] -> Table key String value
+oneColumnTable columnHeader ls = Table (Group NoLine $ map (Header . fst) ls)
+                                       (Header columnHeader)
+                                       (map (\(_, s) -> [s]) ls)
+
+printList :: Show a => String -> [a] -> IO ()
+printList title = putStrLn . render show id show . oneColumnTable title . zip [0..]
+
+printScan :: Show a => [a] -> IO ()
+printScan = putStrLn . intercalate "\n\n" . map show
+```
