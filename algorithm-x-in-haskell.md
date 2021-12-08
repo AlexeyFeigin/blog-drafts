@@ -943,7 +943,7 @@ algoX' (SparseMatrix rows activeCols) solution
 
 Playing in the interpreter with some of the new expressions is left as an exercise to the reader.
 
-This version is little verbose with selecting the column, but the main part of the algorithm remains clear. (Also, we could be caching some things to make the column selection computation more efficient...)
+This version is a little verbose with selecting the column, but the main part of the algorithm remains clear. (Also, we could be caching some things to make the column selection computation more efficient...)
 
 ```Haskell
 ghci> head $ algoX m1
