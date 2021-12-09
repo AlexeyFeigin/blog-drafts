@@ -933,6 +933,7 @@ algoX' (SparseMatrix rows activeCols) solution
         let (c, colSum) = selectedColumn
         in  [ s | colSum > 0,
                   (r, row) <- IntMap.toList rows,
+                  member c row,
                   let m' = SparseMatrix (IntMap.filter (row `disjoint`) rows)
                                         (activeCols `difference` row),
                   s <- algoX' m' (r:solution) ]
