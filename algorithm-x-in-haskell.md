@@ -424,6 +424,9 @@ Another thing we need to do is remove columns from the matrix that we satisfied 
 ghci> unions rows1
 fromList [1,2,3,4,5,6,7]
 
+ghci> rows1 ! 0
+fromList [1,4,7]
+
 ghci> unions rows1 `difference` (rows1 ! 0)
 fromList [2,3,5,6]
 
@@ -465,7 +468,7 @@ ghci> SparseMatrix (IntMap.filter ((rows1 ! 1) `disjoint`) rows1) (unions rows1 
 +---++---+---+---+---+---+
 ```
 
-This matrix represents the remaining options after having picked row 1.(Again, other rows conflicting with the choice and the filled columns have been removed.)
+This matrix represents the remaining options after having picked row 1. (Again, other rows conflicting with the choice and the filled columns have been removed.)
 
 No columns have all 0s, so we could keep searching within this matrix in hopes of finding the complete solution.
 
@@ -494,7 +497,7 @@ Instead of performing these steps through iteration
         - for each row i such that Ai, j = 1,
             - delete row i from matrix A.
 
-we used equivalent the functionality to filter the rows by the criterion of being disjoint with the selected row (the `disjoint` operation runs in _O(n+m)_), and instead of
+we used equivalent functionality to filter the rows by the criterion of being disjoint with the selected row (the `disjoint` operation runs in _O(n+m)_), and instead of
 
 - ...
     - For each column j such that Ar, j = 1,
@@ -514,7 +517,7 @@ scanAlgoXSimple' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSo
 ...
 ```
 
-`scanAlgoXSimple'` is a function taking a matrix and a partial solution (list of `Key`s) and returning a list of intermediate results: a list of state tuples of (a solution, a matrix, a boolean indicating if the solution is complete).
+`scanAlgoXSimple'` is a function taking a matrix and a partial solution (list of `Key`s) and returning a list of intermediate results: a list of state tuples of (a solution, a matrix, a boolean indicating if the solution is complete or partial).
 
 ```Haskell
 -- NOT final version
@@ -596,7 +599,7 @@ ghci> printScan $ scanAlgoXSimple' m1 []
 ,False)*** Exception: findMin: empty map has no minimal element
 ```
 
-We picked row 0. Next we only had one choice, to pick row 3. Next we were left with no rows but column 2 had not been satisfied. We have not handled this case, so we got an error.
+We picked row 0. Next we only had one choice, to pick row 3. Next we were left with no rows but column 2 had not been satisfied. We have not handled the case where are are still active columns but no rows, so we got an error.
 
 ```Haskell
 -- Final version
@@ -613,7 +616,7 @@ scanAlgoXSimple' m@(SparseMatrix rows activeCols) solution
                                          s <- scanAlgoXSimple' m' (r:solution) ]
 ```
 
-Instead of picking a row out of the matrix as before, we now iterate over all rows (`(r, row) <- IntMap.toList rows`). For each row we reduce the matrix and recursively return all state results for that selection (`s <- scanAlgoXSimple' m' (r:solution)`). When we go on to the next row, the matrix will be reduced according to that row selection and the results of `s <- scanAlgoXSimple' m' (r:solution)` will keep being put into the same list (it's all happening in one list comprehension), and so on. (Having multiple `<-` bindings in one list comprehension is a bit like having nested for loops.)
+Instead of picking a row out of the matrix as before, we now iterate over all rows (`(r, row) <- IntMap.toList rows`). For each row we reduce the matrix and recursively return all state results for that selection (`s <- scanAlgoXSimple' m' (r:solution)`). When we go on to the next row, the matrix will be reduced according to that row selection and the results of `s <- scanAlgoXSimple' m' (r:solution)` with the new row will keep being put into the same list (it's all happening in one list comprehension), and so on.
 
 ```Haskell
 ghci> printScan $ scanAlgoXSimple' m1 []
