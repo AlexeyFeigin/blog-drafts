@@ -235,7 +235,7 @@ fromList [1,4,7]
 
 Our interpreter accepts that `set0` is an `IntSet` and also a `Row`.
 
-Now we would like to have a collection of these rows.
+We would like to have a collection of these rows.
 
 ```Haskell
 type Rows = IntMap Row
