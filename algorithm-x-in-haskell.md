@@ -954,6 +954,7 @@ If there is interest, we can throw these algorithms at some large Sudoku-style p
 
 Holy-moly, did you really make it to the end? You are a true hero.
 
+---
 
 ## Appendix
 
