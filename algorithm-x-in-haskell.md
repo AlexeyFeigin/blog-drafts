@@ -950,8 +950,6 @@ ghci> head $ algoX m1
 [5,3,1]
 ```
 
-Turns out the solution is the same in our toy case as with `algoXSimple'`.
-
 If there is interest, we can throw these algorithms at some large Sudoku-style puzzles in some future post.
 
 Holy-moly, did you really make it to the end? You are a true hero.
