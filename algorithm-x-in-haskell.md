@@ -407,7 +407,13 @@ In order to search for an exact cover solution, we should pick a column and try 
 Now we have to remove from the matrix all rows that conflict with row 0. Row 0 contains elements 1, 4 and 7. Any other rows that use these elements must be removed, otherwise we will have some elements of **U** in multiple elements of **S\***. In other words, we must only keep rows disjoint with row 0.
 
 ```Haskell
-ghci> SparseMatrix (IntMap.filter ((rows1 ! 0) `disjoint`) rows1) (unions rows1)
+ghci> :set +m
+```
+(Set multiline mode.)
+
+```Haskell
+ghci> (SparseMatrix (IntMap.filter ((rows1 ! 0) `disjoint`) rows1)
+ghci|               (unions rows1))
 
 +---++---+---+---+---+---+---+---+
 |   || 1 | 2 | 3 | 4 | 5 | 6 | 7 |
@@ -430,7 +436,8 @@ fromList [1,4,7]
 ghci> unions rows1 `difference` (rows1 ! 0)
 fromList [2,3,5,6]
 
-ghci> SparseMatrix (IntMap.filter ((rows1 ! 0) `disjoint`) rows1) (unions rows1 `difference` (rows1 ! 0))
+ghci> (SparseMatrix (IntMap.filter ((rows1 ! 0) `disjoint`) rows1)
+ghci|               (unions rows1 `difference` (rows1 ! 0)))
 
 +---++---+---+---+---+
 |   || 2 | 3 | 5 | 6 |
@@ -457,7 +464,8 @@ ghci> print m1
 | 5 || 0 | 1 | 0 | 0 | 0 | 0 | 1 |
 +---++---+---+---+---+---+---+---+
 
-ghci> SparseMatrix (IntMap.filter ((rows1 ! 1) `disjoint`) rows1) (unions rows1 `difference` (rows1 ! 1))
+ghci> (SparseMatrix (IntMap.filter ((rows1 ! 1) `disjoint`) rows1)
+ghci|               (unions rows1 `difference` (rows1 ! 1)))
 
 +---++---+---+---+---+---+
 |   || 2 | 3 | 5 | 6 | 7 |
@@ -513,7 +521,9 @@ It's time to think about writing a recursive function.
 
 type IsCompleteSolution = Bool
 
-scanAlgoXSimple' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSolution)]
+scanAlgoXSimple' :: SparseMatrix
+                 -> [Key]
+                 -> [([Key], SparseMatrix, IsCompleteSolution)]
 ...
 ```
 
@@ -524,7 +534,9 @@ scanAlgoXSimple' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSo
 
 type IsCompleteSolution = Bool
 
-scanAlgoXSimple' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSolution)]
+scanAlgoXSimple' :: SparseMatrix
+                 -> [Key]
+                 -> [([Key], SparseMatrix, IsCompleteSolution)]
 scanAlgoXSimple' m@(SparseMatrix rows activeCols) solution
     | size activeCols == 0 = [(solution, m, True)]
     | otherwise            = (solution, m, False) : []
@@ -556,7 +568,9 @@ The solution is empty, the matrix is full, and the solution is partial. And we d
 
 type IsCompleteSolution = Bool
 
-scanAlgoXSimple' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSolution)]
+scanAlgoXSimple' :: SparseMatrix
+                 -> [Key]
+                 -> [([Key], SparseMatrix, IsCompleteSolution)]
 scanAlgoXSimple' m@(SparseMatrix rows activeCols) solution
     | size activeCols == 0 = [(solution, m, True)]
     | otherwise =
@@ -606,15 +620,18 @@ We picked row 0. Next we only had one choice, to pick row 3. Next we were left w
 
 type IsCompleteSolution = Bool
 
-scanAlgoXSimple' :: SparseMatrix -> [Key] -> [([Key], SparseMatrix, IsCompleteSolution)]
+scanAlgoXSimple' :: SparseMatrix
+                 -> [Key]
+                 -> [([Key], SparseMatrix, IsCompleteSolution)]
 scanAlgoXSimple' m@(SparseMatrix rows activeCols) solution
     | size activeCols == 0 = [(solution, m, True)]
     | otherwise =
-            (solution, m, False) : [ s | (r, row) <- IntMap.toList rows,
-                                         size row > 0,
-                                         let m' = SparseMatrix (IntMap.filter (row `disjoint`) rows)
-                                                               (activeCols `difference` row),
-                                         s <- scanAlgoXSimple' m' (r:solution) ]
+        (solution, m, False)
+            : [ s | (r, row) <- IntMap.toList rows,
+                    size row > 0,
+                    let m' = SparseMatrix (IntMap.filter (row `disjoint`) rows)
+                                          (activeCols `difference` row),
+                    s <- scanAlgoXSimple' m' (r:solution) ]
 ```
 
 Instead of picking a row out of the matrix as before, we now iterate over all rows (`(r, row) <- IntMap.toList rows`). If the size of row is 0, we cut that search path. For each row we reduce the matrix and recursively return all state results for that selection (`s <- scanAlgoXSimple' m' (r:solution)`). When we go on to the next row, the matrix will be reduced according to that row selection and the results of `s <- scanAlgoXSimple' m' (r:solution)` with the new row will keep being put into the same list (it's all happening in one list comprehension), and so on.
@@ -810,10 +827,13 @@ We have found all of the solutions. They are all permutations of the same soluti
 The output is a little too long, so let's write a function to stop after the first solution is found.
 
 ```Haskell
-upToComplete :: [([Key], SparseMatrix, IsCompleteSolution)] -> [([Key], SparseMatrix, IsCompleteSolution)]
+upToComplete :: [([Key], SparseMatrix, IsCompleteSolution)]
+             -> [([Key], SparseMatrix, IsCompleteSolution)]
 upToComplete states =
-    let (partial, (complete:rest)) = break (\(_, _, isComplete) -> isComplete) states
+    let (partial, (complete:rest)) = break (\(_, _, isComplete) -> isComplete)
+                                           states
     in  partial ++ [complete]
+
 ```
 
 Break the list of states, cutting before the first complete solution. Return the partial solution states that came before the cut, appending the complete solution state (the first after the cut). Ignore the rest.
@@ -884,11 +904,12 @@ Here is a version of the function that only returns the solutions instead of all
 algoXSimple' :: SparseMatrix -> [Key] -> [[Key]]
 algoXSimple' (SparseMatrix rows activeCols) solution
     | size activeCols == 0 = [solution]
-    | otherwise            = [ s | (r, row) <- IntMap.toList rows,
-                                   size row > 0,
-                                   let m' = SparseMatrix (IntMap.filter (row `disjoint`) rows)
-                                                         (activeCols `difference` row),
-                                   s <- algoXSimple' m' (r:solution) ]
+    | otherwise =
+        [ s | (r, row) <- IntMap.toList rows,
+              size row > 0,
+              let m' = SparseMatrix (IntMap.filter (row `disjoint`) rows)
+                                    (activeCols `difference` row),
+              s <- algoXSimple' m' (r:solution) ]
 ```
 
 ```Haskell
@@ -944,7 +965,8 @@ algoX' (SparseMatrix rows activeCols) solution
             colSums        = IntMap.foldl (\sums row -> sums +. withOnes row)
                                           (IntMap.fromSet (\_ -> 0) activeCols)
                                           rows
-            selectedColumn = snd . minimum $ map (\(key, cSum) -> (cSum, (key, cSum))) $ IntMap.toList colSums
+            selectedColumn = snd . minimum $ map (\(key, cSum) -> (cSum, (key, cSum)))
+                                                 (IntMap.toList colSums)
 ```
 
 Playing in the interpreter with some of the new expressions is left as an exercise to the reader.
