@@ -356,22 +356,22 @@ type ActiveCols = IntSet
 
 `ActiveCols` is a type synonym for `IntSet`.
 
-In our case, we would want to use the unions of our `sets1` to form the active columns.
+In our case, we would want to use the unions of our `rows1` to form the active columns.
 
 ```Haskell
-ghci> printList "Set" sets1
-+---++--------------------+
-|   ||                Set |
-+===++====================+
-| 0 ||   fromList [1,4,7] |
-| 1 ||     fromList [1,4] |
-| 2 ||   fromList [4,5,7] |
-| 3 ||   fromList [3,5,6] |
-| 4 || fromList [2,3,6,7] |
-| 5 ||     fromList [2,7] |
-+---++--------------------+
+ghci> printList "(Key, Row)" $ IntMap.toList rows1
++---++------------------------+
+|   ||             (Key, Row) |
++===++========================+
+| 0 ||   (0,fromList [1,4,7]) |
+| 1 ||     (1,fromList [1,4]) |
+| 2 ||   (2,fromList [4,5,7]) |
+| 3 ||   (3,fromList [3,5,6]) |
+| 4 || (4,fromList [2,3,6,7]) |
+| 5 ||     (5,fromList [2,7]) |
++---++------------------------+
 
-ghci> unions sets1
+ghci> unions rows1
 fromList [1,2,3,4,5,6,7]
 ```
 
@@ -382,7 +382,7 @@ data SparseMatrix = SparseMatrix Rows ActiveCols
 `SparseMatrix` is a new data type containing `Rows` and `ActiveCols`.
 
 ```Haskell
-m1 = SparseMatrix rows1 (unions sets1)
+m1 = SparseMatrix rows1 (unions rows1)
 ```
 
 ```Haskell
@@ -407,7 +407,7 @@ In order to search for an exact cover solution, we should pick a column and try 
 Now we have to remove from the matrix all rows that conflict with row 0. Row 0 contains elements 1, 4 and 7. Any other rows that use these elements must be removed, otherwise we will have some elements of **U** in multiple elements of **S\***. In other words, we must only keep rows disjoint with row 0.
 
 ```Haskell
-ghci> SparseMatrix (IntMap.filter ((rows1 ! 0) `disjoint`) rows1) (unions sets1)
+ghci> SparseMatrix (IntMap.filter ((rows1 ! 0) `disjoint`) rows1) (unions rows1)
 
 +---++---+---+---+---+---+---+---+
 |   || 1 | 2 | 3 | 4 | 5 | 6 | 7 |
@@ -421,13 +421,13 @@ Only row 3 is disjoint with row 0.
 Another thing we need to do is remove columns from the matrix that we satisfied by picking row 0. We remove these from the `ActiveCols` of the matrix.
 
 ```Haskell
-ghci> unions sets1
+ghci> unions rows1
 fromList [1,2,3,4,5,6,7]
 
-ghci> unions sets1 `difference` (rows1 ! 0)
+ghci> unions rows1 `difference` (rows1 ! 0)
 fromList [2,3,5,6]
 
-ghci> SparseMatrix (IntMap.filter ((rows1 ! 0) `disjoint`) rows1) (unions sets1 `difference` (rows1 ! 0))
+ghci> SparseMatrix (IntMap.filter ((rows1 ! 0) `disjoint`) rows1) (unions rows1 `difference` (rows1 ! 0))
 
 +---++---+---+---+---+
 |   || 2 | 3 | 5 | 6 |
@@ -454,7 +454,7 @@ ghci> print m1
 | 5 || 0 | 1 | 0 | 0 | 0 | 0 | 1 |
 +---++---+---+---+---+---+---+---+
 
-ghci> SparseMatrix (IntMap.filter ((rows1 ! 1) `disjoint`) rows1) (unions sets1 `difference` (rows1 ! 1))
+ghci> SparseMatrix (IntMap.filter ((rows1 ! 1) `disjoint`) rows1) (unions rows1 `difference` (rows1 ! 1))
 
 +---++---+---+---+---+---+
 |   || 2 | 3 | 5 | 6 | 7 |
