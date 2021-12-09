@@ -2,7 +2,7 @@
 
 Now, don't panic. You don't necessarily need to know Haskell, as I will describe everything that's happening.
 
-Suppose we have a set **U** = {1, 2, 3, 4, 5, 6, 7} and a set **S** of subsets of **U**:
+Suppose we have a set **U** = {1, 2, 3, 4, 5, 6, 7} and a set **S** of certain subsets of **U**:
 
 **S** =
 
