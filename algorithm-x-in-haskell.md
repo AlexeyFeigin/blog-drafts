@@ -1,7 +1,5 @@
 # Draft: A case study in concise code - Algorithm X
 
-Now, don't panic. You don't necessarily need to know Haskell, as I will describe everything that's happening.
-
 Suppose we have a set **U** = {1, 2, 3, 4, 5, 6, 7} and a set **S** of certain subsets of **U**:
 
 **S** =
@@ -95,7 +93,11 @@ Some elements of **U** appear in more than one element of the set.
 
 # Simple Algorithm X
 
-Algorithm X is an algorithm developed by Donald Knuth that solves the exact cover problem. Let's implement Algorithm X in Haskell. We can later use it to solve Sudoku puzzles (in another blog post).
+Algorithm X is an algorithm developed by Donald Knuth that solves the exact cover problem. Let's implement Algorithm X in Haskell.
+
+Now, don't panic. You don't necessarily need to know Haskell, as I will describe everything that's happening.
+
+We can later use it to solve Sudoku puzzles (in another blog post).
 
 Here come some imports.
 
