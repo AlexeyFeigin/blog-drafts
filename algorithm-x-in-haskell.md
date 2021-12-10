@@ -1,4 +1,4 @@
-# Draft: Algorithm X in Haskell step by step
+# Draft: A case study in concise code - Algorithm X
 
 Now, don't panic. You don't necessarily need to know Haskell, as I will describe everything that's happening.
 
@@ -628,13 +628,12 @@ scanAlgoXSimple' m@(SparseMatrix rows activeCols) solution
     | otherwise =
         (solution, m, False)
             : [ s | (r, row) <- IntMap.toList rows,
-                    size row > 0,
                     let m' = SparseMatrix (IntMap.filter (row `disjoint`) rows)
                                           (activeCols `difference` row),
                     s <- scanAlgoXSimple' m' (r:solution) ]
 ```
 
-Instead of picking a row out of the matrix as before, we now iterate over all rows (`(r, row) <- IntMap.toList rows`). If the size of row is 0, we cut that search path. For each row we reduce the matrix and recursively return all state results for that selection (`s <- scanAlgoXSimple' m' (r:solution)`). When we go on to the next row, the matrix will be reduced according to that row selection and the results of `s <- scanAlgoXSimple' m' (r:solution)` with the new row will keep being put into the same list (it's all happening in one list comprehension), and so on.
+Instead of picking a row out of the matrix as before, we now iterate over all rows (`(r, row) <- IntMap.toList rows`). For each row we reduce the matrix and recursively return all state results for that selection (`s <- scanAlgoXSimple' m' (r:solution)`). When we go on to the next row, the matrix will be reduced according to that row selection and the results of `s <- scanAlgoXSimple' m' (r:solution)` with the new row will keep being put into the same list (it's all happening in one list comprehension), and so on.
 
 ```Haskell
 ghci> printScan $ scanAlgoXSimple' m1 []
@@ -906,7 +905,6 @@ algoXSimple' (SparseMatrix rows activeCols) solution
     | size activeCols == 0 = [solution]
     | otherwise =
         [ s | (r, row) <- IntMap.toList rows,
-              size row > 0,
               let m' = SparseMatrix (IntMap.filter (row `disjoint`) rows)
                                     (activeCols `difference` row),
               s <- algoXSimple' m' (r:solution) ]
@@ -938,7 +936,7 @@ Compare this for compactness and simplicity with Dancing Links, which is how Alg
 
 https://www.wikiwand.com/en/Dancing_Links
 
-## Column selection
+## Adding column selection
 
 Now, as Wikipedia says: to reduce the number of iterations, Knuth suggests that the column-choosing algorithm select a column with the smallest number of 1s in it.
 
@@ -971,7 +969,7 @@ algoX' (SparseMatrix rows activeCols) solution
 
 Playing in the interpreter with some of the new expressions is left as an exercise to the reader.
 
-This version is a little verbose with selecting the column, but the main part of the algorithm remains clean. (We could be caching some things to make the column selection computation more efficient...)
+This version is a little verbose with selecting the column, but the main part of the algorithm remains clean. We've added guards: if the column sum is zero or if the selected column is not in the row then we cut that search path. (We could be caching some things to make the column selection computation more efficient...)
 
 ```Haskell
 ghci> head $ algoX m1
