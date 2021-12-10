@@ -97,7 +97,7 @@ Algorithm X is an algorithm developed by Donald Knuth that solves the exact cove
 
 Now, don't panic. You don't necessarily need to know Haskell, as I will describe everything that's happening.
 
-We can later use it to solve Sudoku puzzles (in another blog post).
+We can later use this to solve Sudoku puzzles (in another blog post).
 
 Here come some imports.
 
