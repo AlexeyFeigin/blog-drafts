@@ -977,6 +977,15 @@ ghci> head $ algoX m1
 [5,3,1]
 ```
 
+Taking the first solution, it is what we expected.
+
+One thing to note is that because we are now selecting one column for any particular matrix, we do not search through all permutations of our single solution anymore:
+
+```Haskell
+ghci> algoX m1
+[[5,3,1]]
+```
+
 If there is interest, we can throw these algorithms at some large Sudoku-style puzzles in some future post.
 
 Holy-moly, did you really make it to the end? You are a true hero.
