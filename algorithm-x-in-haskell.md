@@ -105,12 +105,11 @@ Here come some imports.
 module AlgorithmX where
 
 import Data.IntSet hiding (map, filter, foldl)
-import qualified Data.IntSet as IntSet
-import Data.IntMap (IntMap, (!))
+import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
 import Data.List
 
-import Text.Tabular
+import Text.Tabular hiding (row)
 import Text.Tabular.AsciiArt
 ```
 
@@ -831,13 +830,12 @@ The output is a little too long, so let's write a function to stop after the fir
 upToComplete :: [([Key], SparseMatrix, IsCompleteSolution)]
              -> [([Key], SparseMatrix, IsCompleteSolution)]
 upToComplete states =
-    let (partial, (complete:rest)) = break (\(_, _, isComplete) -> isComplete)
-                                           states
-    in  partial ++ [complete]
-
+    case break (\(_, _, isComplete) -> isComplete) states of
+        (partial, [])           -> partial
+        (partial, (complete:_)) -> partial ++ [complete]
 ```
 
-Break the list of states, cutting before the first complete solution. Return the partial solution states that came before the cut, appending the complete solution state (the first after the cut). Ignore the rest.
+Break the list of states, cutting before the first complete solution. Return the partial solution states that came before the cut, appending the complete solution state (the first after the cut if it exists). Ignore the rest.
 
 ```Haskell
 ghci> printScan $ upToComplete $ scanAlgoXSimple' m1 []
@@ -961,10 +959,11 @@ algoX' (SparseMatrix rows activeCols) solution
                                         (activeCols `difference` row),
                   s <- algoX' m' (r:solution) ]
         where
-            withOnes row   = IntMap.fromSet (\_ -> 1) $ row `intersection` activeCols
-            colSums        = IntMap.foldl (\sums row -> sums +. withOnes row)
+            withOnes row'  = IntMap.fromSet (\_ -> 1) $ row' `intersection` activeCols
+            colSums        = IntMap.foldl (\sums row'' -> sums +. withOnes row'')
                                           (IntMap.fromSet (\_ -> 0) activeCols)
                                           rows
+            selectedColumn :: (Key, Int)
             selectedColumn = snd . minimum $ map (\(key, cSum) -> (cSum, (key, cSum)))
                                                  (IntMap.toList colSums)
 ```
@@ -994,7 +993,7 @@ row !. key
     | member key row = 1
     | otherwise      = 0
 
-toFilledList :: Num a => ActiveCols -> Row -> [a]
+toFilledList :: ActiveCols -> Row -> [Int]
 toFilledList activeCols row = map (row !.) $ elems activeCols
 
 instance Show SparseMatrix where
@@ -1012,7 +1011,7 @@ oneColumnTable columnHeader ls = Table (Group NoLine $ map (Header . fst) ls)
                                        (map (\(_, s) -> [s]) ls)
 
 printList :: Show a => String -> [a] -> IO ()
-printList title = putStrLn . render show id show . oneColumnTable title . zip [0..]
+printList title = putStrLn . render show id show . oneColumnTable title . zip [0::Int ..]
 
 printScan :: Show a => [a] -> IO ()
 printScan = putStrLn . intercalate "\n\n" . map show
