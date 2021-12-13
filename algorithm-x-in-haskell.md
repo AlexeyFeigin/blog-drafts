@@ -988,7 +988,19 @@ ghci> algoX m1
 
 If there is interest, we can throw these algorithms at some large Sudoku-style puzzles in some future post.
 
-Holy-moly, did you really make it to the end? You are a true hero.
+## Play around yourself
+
+The code is available here:
+
+https://github.com/AlexeyFeigin/algorithm-x
+
+The Demo module includes all the variables defined in this blog post.
+
+You will need to install ghc (the Glasgow Haskell Compiler) and cabal (the Haskell package manager), which both come with the Haskell Platform:
+
+https://www.haskell.org/platform/
+
+Happy hacking!
 
 ---
 
