@@ -91,7 +91,7 @@ Another example of a non-solution is:
 Some elements of **U** appear in more than one element of the set.
 
 
-# Simple Algorithm X
+## Simple Algorithm X
 
 Algorithm X is an algorithm developed by Donald Knuth that solves the exact cover problem. Let's implement Algorithm X in Haskell.
 
